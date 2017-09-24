@@ -1,8 +1,15 @@
 import shelve
+import urllib3
+import config
+import imageio
+import shutil
+import os
+from imageio import *
 from SQLighter import SQLighter
 from config import shelve_name, database_name
 from telebot import types
 from random import shuffle
+from PIL import Image
 
 def count_rows():
     """
@@ -75,4 +82,26 @@ def generate_markup(right_answer, wrong_answer):
         markup.add(item)
     return markup
 
-
+def make_barrel_roll(file_path):
+    """
+    Making rotated image and save it as gif-file
+    :param file_path: string
+    :return: file in storage
+    """
+    http = urllib3.PoolManager()
+    url = 'https://api.telegram.org/file/bot{0}/{1}'.format(config.token,file_path)
+    with http.request('GET', url, preload_content=False) as r, open('avatar.jpg', 'wb') as out_file:
+        shutil.copyfileobj(r, out_file)
+    im1 = Image.open('avatar.jpg')
+    im = []
+    for i in range(-3,4): #
+        tmp = im1.rotate(i*45)
+        tmp.save(str(i)+'.JPEG', "JPEG")
+    positions = [x for x in range(0, 4)] + [x for x in range(2, -4, -1)] + [x for x in range(-3,1)]
+    images = []
+    for i in positions:
+        images.append(imageio.imread(str(i)+'.JPEG'))
+    imageio.mimsave('barrel_roll.gif', images, duration = 0.5)
+    for i in range(-3,4):
+        os.remove('{0}.JPEG'.format(str(i)))
+    os.remove('avatar.jpg')

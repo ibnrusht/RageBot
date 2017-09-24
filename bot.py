@@ -3,7 +3,9 @@ import telebot
 from SQLighter import SQLighter
 import random
 import utils
+import imageio
 from telebot import types
+import os
 
 bot = telebot.TeleBot(config.token)
 
@@ -16,7 +18,8 @@ bot = telebot.TeleBot(config.token)
 
 commands = {'start': 'Hello message',
             'help': 'Gives you information about the available commands',
-            'game': 'A guess the melody game'}
+            'game': 'A guess the melody game',
+            'barrel': 'Make a barrel roll'}
 
 # Guess the melody
 @bot.message_handler(commands=['start'])
@@ -27,6 +30,7 @@ def start(message):
     if message.chat.type == "group":
         bot.send_message(cid, 'Hello, motherfuckers.')
 
+
 @bot.message_handler(commands=['help'])
 def help(message):
     cid = message.chat.id
@@ -35,6 +39,35 @@ def help(message):
         help_text += "/" + key + ": "
         help_text += commands[key] + "\n"
     bot.send_message(cid, help_text)  # send the generated help page
+
+@bot.message_handler(commands=['barrel'])
+def barrel(message):
+    cid = message.chat.id
+    uid = message.from_user.id
+    uname = message.from_user.username
+    db_worker = SQLighter(config.users_db)
+    user_photo = bot.get_user_profile_photos(uid,0,1) # getting user profile photo
+    fid = user_photo.photos[0][0].file_id # getting user profile photo id
+    if db_worker.check_user(uid): # if user exists
+        if db_worker.check_barrel(uid): # if barrel_roll-gif already exists
+            bar_id = db_worker.get_barrel(uid) # getting its file id
+            bot.send_document(cid,bar_id) # sending barrel_roll-gif
+        else:
+            file_path = bot.get_file(fid).file_path # getting file_path of users profile image
+            utils.make_barrel_roll(file_path) # making gif-animation
+            barrel_roll = open('barrel_roll.gif', 'rb')
+            msg = bot.send_document(cid,barrel_roll) # sending gif-animation to chat
+            barrel_roll_id = msg.document.file_id # saving gif-animation file id
+            db_worker.add_barrel(uid,barrel_roll_id) # saving file-id in database
+    else:
+        db_worker.add_user(uid,uname,fid)
+        file_path = bot.get_file(fid).file_path
+        utils.make_barrel_roll(file_path)
+        barrel_roll = open('barrel_roll.gif', 'rb')
+        msg = bot.send_document(cid, barrel_roll)
+        barrel_roll_id = msg.document.file_id
+        db_worker.add_barrel(uid, barrel_roll_id)
+        os.remove('barrel_roll.gif')
 
 @bot.message_handler(commands=['game'])
 def game(message):
@@ -55,7 +88,8 @@ def check_answer(message):
     cid = message.chat.id
     answer = utils.get_answer_for_user(cid)
     if not answer:
-        bot.send_message(cid, 'Чтобы начать игру, выберите команду /game')
+        pass
+        # bot.send_message(cid, 'Чтобы начать игру, выберите команду /game')
     else:
         keyboard_hider = types.ReplyKeyboardRemove()
         if message.text == answer:
@@ -63,6 +97,8 @@ def check_answer(message):
         else:
             bot.send_message(cid, 'Увы, Вы не угадали. Попробуйте ещё раз!', reply_markup=keyboard_hider, reply_to_message_id=message.message_id)
         utils.finish_user_game(cid)
+
+
 
 if __name__ == '__main__':
     utils.count_rows()
