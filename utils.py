@@ -4,6 +4,7 @@ import config
 import imageio
 import shutil
 import os
+import random
 from imageio import *
 from SQLighter import SQLighter
 from config import shelve_name, database_name
@@ -48,6 +49,14 @@ def finish_user_game(user_id):
     """
     with shelve.open(shelve_name) as storage:
         del storage[str(user_id)]
+
+def check_user_in_game(user_id):
+    with shelve.open(shelve_name) as storage:
+        try:
+            tmp = storage[str(user_id)]
+        except KeyError:
+            tmp = 0
+    return tmp
 
 
 def get_answer_for_user(user_id):
@@ -105,3 +114,14 @@ def make_barrel_roll(file_path):
     for i in range(-3,4):
         os.remove('{0}.JPEG'.format(str(i)))
     os.remove('avatar.jpg')
+
+def petros():
+    """
+    Send random aneqdotue from nech.txt file
+    :param message: shoud consists string "petros"
+    :return:
+    """
+    with open("petros\\nech.txt","r") as f:
+        anech = f.read().split('\n\n')
+        aneque = anech[random.randint(2,len(anech))]
+    return aneque

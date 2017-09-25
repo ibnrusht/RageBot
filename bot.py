@@ -25,9 +25,10 @@ commands = {'start': 'Hello message',
 @bot.message_handler(commands=['start'])
 def start(message):
     cid = message.chat.id
-    if message.chat.type == "private":
+    chat_type = message.chat.type
+    if chat_type == "private":
         bot.send_message(cid, 'Hi, fuckface.')
-    if message.chat.type == "group":
+    if (chat_type == "group")|(chat_type == "supergroup"):
         bot.send_message(cid, 'Hello, motherfuckers.')
 
 
@@ -49,8 +50,8 @@ def barrel(message):
     user_photo = bot.get_user_profile_photos(uid,0,1) # getting user profile photo
     fid = user_photo.photos[0][0].file_id # getting user profile photo id
     if db_worker.check_user(uid): # if user exists
-        if db_worker.check_barrel(uid): # if barrel_roll-gif already exists
-            bar_id = db_worker.get_barrel(uid) # getting its file id
+        if db_worker.check_barrel(uid): # if barrel_roll-gif already exists and uploaded
+            bar_id = db_worker.get_barrel(uid) # getting file id
             bot.send_document(cid,bar_id) # sending barrel_roll-gif
         else:
             file_path = bot.get_file(fid).file_path # getting file_path of users profile image
@@ -67,36 +68,49 @@ def barrel(message):
         msg = bot.send_document(cid, barrel_roll)
         barrel_roll_id = msg.document.file_id
         db_worker.add_barrel(uid, barrel_roll_id)
-        os.remove('barrel_roll.gif')
+        #os.remove('barrel_roll.gif')
 
 @bot.message_handler(commands=['game'])
 def game(message):
     cid = message.chat.id
+    uid = message.from_user.id
+    chat_type = message.chat.type
     db_worker = SQLighter(config.database_name)
     row = db_worker.select_single(random.randint(1, utils.get_rows_count()))
     markup = utils.generate_markup(row[2],row[3])
-    if message.chat.type == "private":
+    if chat_type == "private":
         bot.send_voice(cid, row[1], reply_markup=markup)
         utils.set_user_game(cid, row[2])
-    elif message.chat.type == "group":
+    elif (chat_type == "group")|(chat_type == "supergroup"):
         bot.send_voice(cid, row[1], reply_markup=markup, reply_to_message_id=message.message_id)
-        utils.set_user_game(cid, row[2])
+        utils.set_user_game(uid, row[2])
     db_worker.close()
+
+@bot.message_handler(func=lambda message: message.content_type == 'new_chat_members')
+def new_chat_member(message):
+    pass
+
+
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def check_answer(message):
     cid = message.chat.id
-    answer = utils.get_answer_for_user(cid)
-    if not answer:
-        pass
-        # bot.send_message(cid, 'Чтобы начать игру, выберите команду /game')
+    uid = message.from_user.id
+    if 'петрос' in message.text.lower(): # если встречается слово "петрос"
+        anech = utils.petros()
+        bot.send_message(cid, anech)
     else:
+        pass
+    if utils.check_user_in_game(uid):
+        answer = utils.get_answer_for_user(uid)
         keyboard_hider = types.ReplyKeyboardRemove()
         if message.text == answer:
             bot.send_message(cid, 'Верно!', reply_markup=keyboard_hider, reply_to_message_id=message.message_id)
         else:
             bot.send_message(cid, 'Увы, Вы не угадали. Попробуйте ещё раз!', reply_markup=keyboard_hider, reply_to_message_id=message.message_id)
-        utils.finish_user_game(cid)
+        utils.finish_user_game(uid)
+    else:
+        pass
 
 
 
