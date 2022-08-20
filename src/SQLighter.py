@@ -24,12 +24,28 @@ class SQLighter:
 
     def check_user(self, user_id):
         with self.connection:
-            return True if self.cursor.execute('SELECT * FROM users WHERE user_id = '+str(user_id)).fetchall() else False
+            check_table = self.cursor.execute("""SELECT count(name)
+            FROM sqlite_master
+            WHERE type='table'""").fetchall()
+            if check_table[0][0]:
+                return True if \
+                     self.cursor.execute('SELECT * FROM users WHERE\
+                        user_id = '+str(user_id)).fetchall() else False
+            else:
+                self.cursor.execute("""CREATE TABLE IF NOT EXISTS users(
+                    user_id INTEGER PRIMARY KEY,
+                    username TEXT,
+                    avatar_file_id INTEGER,
+                    barrel_roll_id INTEGER
+                    );""").fetchall()
+                return False
 
     def add_user(self, user_id, username, avatar_file_id):
         with self.connection:
             vls = [str(user_id), username, avatar_file_id]
-            self.cursor.execute('INSERT INTO users (user_id, username, avatar_file_id) VALUES (?, ?, ?)',vls)
+            self.cursor.execute("""INSERT INTO users
+            (user_id, username, avatar_file_id)
+            VALUES (?, ?, ?)""", vls)
 
     def check_barrel(self,user_id):
         """
@@ -39,7 +55,6 @@ class SQLighter:
         """
         with self.connection:
             tmp = self.cursor.execute('SELECT barrel_roll_id FROM users WHERE user_id = '+str(user_id)).fetchall()
-            tmp2 = tmp[0][0]
             return True if tmp[0][0] else False
 
     def add_barrel(self,user_id,barrel_roll_id):
@@ -59,11 +74,12 @@ class SQLighter:
         :return: int, barrer-roll file id
         """
         with self.connection:
-            bar_id = self.cursor.execute('SELECT barrel_roll_id FROM users WHERE user_id = '+str(user_id)).fetchall()
+            bar_id = self.cursor.execute("""SELECT barrel_roll_id
+            FROM users 
+            WHERE user_id = """+str(user_id)).fetchall()
             return bar_id[0][0]
 
     def close(self):
-        """ Закрываем текущее соединение с БД """
         self.connection.close()
 
 

@@ -3,3 +3,7 @@
 *.dat
 *.dir
 *.db
+*.gif
+
+###########
+__pycache__

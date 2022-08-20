@@ -3,6 +3,4 @@
 *.dat
 *.dir
 *.db
-
-####
-config.py
+*.gif

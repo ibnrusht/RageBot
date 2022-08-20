@@ -1,8 +1,8 @@
-import src.config as config
+import config as config
 import telebot
-from src.SQLighter import SQLighter
+from SQLighter import SQLighter
 import random
-import src.utils as utils
+import utils as utils
 import imageio
 from telebot import types
 import os
@@ -10,18 +10,12 @@ import os
 bot = telebot.TeleBot(config.token)
 
 
-# echo-bot
-#@bot.message_handler(content_types=["text"])
-#def repeat_all_messages(message):
-#    bot.send_message(message.chat.id, message.text)
-
-
 commands = {'start': 'Hello message',
             'help': 'Gives you information about the available commands',
             'game': 'A guess the melody game',
             'barrel': 'Make a barrel roll'}
 
-# Guess the melody
+
 @bot.message_handler(commands=['start'])
 def start(message):
     cid = message.chat.id
@@ -47,8 +41,8 @@ def barrel(message):
     uid = message.from_user.id
     uname = message.from_user.username
     db_worker = SQLighter(config.users_db)
-    user_photo = bot.get_user_profile_photos(uid,0,1) # getting user profile photo
-    fid = user_photo.photos[0][0].file_id # getting user profile photo id
+    user_photo = bot.get_user_profile_photos(uid,0,1)
+    fid = user_photo.photos[0][0].file_id
     if db_worker.check_user(uid): # if user exists
         if db_worker.check_barrel(uid): # if barrel_roll-gif already exists and uploaded
             bar_id = db_worker.get_barrel(uid) # getting file id
@@ -115,6 +109,5 @@ def check_answer(message):
 
 
 if __name__ == '__main__':
-    utils.count_rows()
     random.seed()
     bot.polling(none_stop=True)
