@@ -1,25 +1,25 @@
 import shelve
 import urllib3
 from imageio import *
-import config as config
+import config
 import imageio
 import shutil
 import os
 import random
 from SQLighter import SQLighter
-from config import shelve_name, database_name
 from telebot import types
 from random import shuffle
 from PIL import Image
+import os.path
 
 def count_rows():
     """
     It counts rows in database
     :return: rows number
     """
-    db = SQLighter(database_name)
+    db = SQLighter(config.database_name)
     rowsnum = db.count_rows()
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         storage['rows_count'] = rowsnum
 
 
@@ -28,7 +28,7 @@ def get_rows_count():
     it gets the rouws number from shelve
     :return: int, rows number
     """
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         rowsnum = storage['rows_count']
     return rowsnum
 
@@ -39,7 +39,7 @@ def set_user_game(user_id, estimated_answer):
     :param estimated_answer: right answer from DB
     :return:
     """
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         storage[str(user_id)] = estimated_answer
 
 def finish_user_game(user_id):
@@ -47,11 +47,11 @@ def finish_user_game(user_id):
     Заканчиваем игру текущего пользователя и удаляем правильный ответ из хранилища
     :param user_id: id юзера
     """
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         del storage[str(user_id)]
 
 def check_user_in_game(user_id):
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         try:
             tmp = storage[str(user_id)]
         except KeyError:
@@ -65,11 +65,10 @@ def get_answer_for_user(user_id):
     :param user_id: user id
     :return: (str) right answer / None
     """
-    with shelve.open(shelve_name) as storage:
+    with shelve.open(config.shelve_name) as storage:
         try:
             answer = storage[str(user_id)]
             return answer
-        # Если человек не играет, ничего не возвращаем
         except KeyError:
             return None
 
@@ -121,7 +120,8 @@ def petros():
     :param message: shoud consists string "petros"
     :return:
     """
-    with open("petros\\nech.txt","r") as f:
-        anech = f.read().split('\n\n')
+    with open(os.path.dirname(__file__) + "/../msc/anek.txt","r") as f:
+        anech = f.read().split('\n\n\n')
+        test=len(anech)
         aneque = anech[random.randint(2,len(anech))]
     return aneque

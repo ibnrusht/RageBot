@@ -4,6 +4,7 @@
 *.dir
 *.db
 *.gif
+*.txt
 
 ###########
 __pycache__
