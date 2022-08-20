@@ -1,8 +1,8 @@
-import config
+import src.config as config
 import telebot
-from SQLighter import SQLighter
+from src.SQLighter import SQLighter
 import random
-import utils
+import src.utils as utils
 import imageio
 from telebot import types
 import os

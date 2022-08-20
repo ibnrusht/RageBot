@@ -1,13 +1,13 @@
 import shelve
 import urllib3
-import config
+import src.config as config
 import imageio
 import shutil
 import os
 import random
 from imageio import *
-from SQLighter import SQLighter
-from config import shelve_name, database_name
+from src.SQLighter import SQLighter
+from src.config import shelve_name, database_name
 from telebot import types
 from random import shuffle
 from PIL import Image
